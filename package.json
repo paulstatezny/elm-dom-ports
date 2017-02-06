@@ -1,6 +1,6 @@
 {
   "name": "elm-dom-ports",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Generic Elm ports for interacting with the DOM",
   "main": "lib/js/dom-ports.js",
   "scripts": {
