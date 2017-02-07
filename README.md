@@ -1,4 +1,4 @@
-# Elm Dom Ports
+# Elm Dom Ports [![Build Status](https://travis-ci.org/knledg/elm-dom-ports.svg?branch=master)](https://travis-ci.org/knledg/elm-dom-ports)
 
 Interface with the DOM manually in Elm.
 
