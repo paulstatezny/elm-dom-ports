@@ -46,8 +46,18 @@ const addClass = (className) => (node) => {
   }
 };
 
+const removeClass = (className) => (node) => {
+  let regExp = new RegExp(
+    `(^|\\s)${className}(?!\\S)`,
+    "g"
+  );
+
+  node.className = node.className.replace(regExp, " ");
+}
+
 module.exports = {
   addClass: addClass,
+  removeClass: removeClass,
   getNodeList: getNodeList,
   getNode: getNode
 };

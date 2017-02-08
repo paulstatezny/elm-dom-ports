@@ -157,14 +157,7 @@ function register(ports, log) {
   function removeClass([selector, className]) {
     log("removeClass", selector, className);
 
-    domUtils.getNodeList(selector).forEach(node => {
-      let regExp = new RegExp(
-        `(^|\\s)${className}(?!\\S)`,
-        "g"
-      );
-
-      node.className = node.className.replace(regExp, " ");
-    });
+    domUtils.getNodeList(selector).forEach(domUtils.removeClass(className));
   }
 
   /**

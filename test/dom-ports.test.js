@@ -4,6 +4,7 @@
 
 let mockDomUtils = {};
 let mockAddClassCurried;
+let mockRemoveClassCurried;
 let mockPorts;
 let mockNode;
 let mockNodeList;
@@ -57,10 +58,12 @@ describe('dom-ports', () => {
     mockNode = {};
 
     mockAddClassCurried = jest.fn();
+    mockRemoveClassCurried = jest.fn();
 
     mockDomUtils.getNodeList = jest.fn(() => mockNodeList);
     mockDomUtils.getNode = jest.fn(() => mockNode);
     mockDomUtils.addClass = jest.fn(() => mockAddClassCurried);
+    mockDomUtils.removeClass = jest.fn(() => mockRemoveClassCurried);
 
     domPorts = require('../src/dom-ports');
 
@@ -141,6 +144,23 @@ describe('dom-ports', () => {
   });
 
   describe('removeClass', () => {
+    beforeEach(() => {
+      port(mockPorts.removeClass)(['.bar', 'bar--active-class']);
+    });
+
+    test('the given class is added', () => {
+      expect(mockCall(mockDomUtils.removeClass)).toEqual(['bar--active-class']);
+    });
+
+    test('requests nodes with the given selector', () => {
+      expect(mockCall(mockDomUtils.getNodeList)).toEqual(['.bar']);
+    });
+
+    test('adds the class to every DOM node', () => {
+      expect(mockCall(mockRemoveClassCurried, 0)[0]).toEqual(mockNodeList[0]);
+      expect(mockCall(mockRemoveClassCurried, 1)[0]).toEqual(mockNodeList[1]);
+      expect(mockCall(mockRemoveClassCurried, 2)[0]).toEqual(mockNodeList[2]);
+    });
   });
 
   describe('toggleClass', () => {
