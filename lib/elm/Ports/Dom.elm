@@ -33,6 +33,7 @@ type alias HtmlElement =
   , innerHtml : Maybe String
   , pathname : Maybe String
   , value : Maybe String
+  , children : Maybe (List HtmlElement)
   }
 
 
