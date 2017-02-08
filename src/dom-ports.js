@@ -190,7 +190,13 @@ function register(ports, log) {
     log(
       "innerHtml",
       selector,
-      rawHtml === "" ? "" : "\n" + rawHtml.substring(0, 200) + (rawHtml.length > 200 ? "..." : "")
+      rawHtml === ""
+        ? ""
+        : "\n"
+          + rawHtml.substring(0, 200)
+          + (rawHtml.length > 200
+               ? "..."
+               : "")
     );
 
     domUtils.getNodeList(selector).forEach(node => {
@@ -202,6 +208,8 @@ function register(ports, log) {
 
   /**
    * Append the given HTML as a child of the `parentSelector` node.
+   *
+   * Does not work in Internet Explorer.
    *
    * @param  {String} parentSelector DOM selector for the container of the `rawHtml`
    * @param  {String} rawHtml        HTML represented as a string (should have a single root node, or else failure might occur)
@@ -288,7 +296,7 @@ function register(ports, log) {
   function windowScrollToSelector(selector) {
     log("windowScrollToSelector", selector);
 
-    const node = domUtils.domUtils.getNode(selector);
+    const node = domUtils.getNode(selector);
 
     if (!node) {
       log("windowScrollToSelector [node not found]", selector);
