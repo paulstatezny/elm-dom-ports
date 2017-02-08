@@ -464,6 +464,7 @@ function toNodeRecord(node) {
     innerHtml: node.innerHTML || null,
     pathname: node.pathname || null,
     value: node.value || null,
+    children: node.children || null,
   };
 
   // Firefox throws an Error when JSON serializing an object with a reference to itself
