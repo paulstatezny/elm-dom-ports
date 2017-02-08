@@ -33,7 +33,6 @@ type alias HtmlElement =
   , innerHtml : Maybe String
   , pathname : Maybe String
   , value : Maybe String
-  , children : Maybe (List HtmlElement)
   }
 
 
@@ -132,6 +131,7 @@ port setDataAttribute : (Selector, DataKey, DataValue) -> Cmd msg
 -- DOM inspection
 port getNodePosition : Selector -> Cmd msg
 port querySelector : Selector -> Cmd msg
+port querySelectorAll : Selector -> Cmd msg
 
 
 -- Preloading

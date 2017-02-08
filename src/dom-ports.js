@@ -55,6 +55,7 @@ function register(ports, log) {
   // DOM inspection
   ports.getNodePosition.subscribe(getNodePosition);
   ports.querySelector.subscribe(querySelector);
+  ports.querySelectorAll.subscribe(querySelectorAll);
 
   // Preloading
   ports.preloadImage.subscribe(preloadImage);
@@ -432,6 +433,26 @@ function register(ports, log) {
   }
 
   /**
+   * Send the Elm app an HtmlElement record of the all the DOM nodes matching the given selector.
+   *
+   * @param  {String} selector DOM selector
+   */
+  function querySelectorAll(selector) {
+    log("querySelector", selector);
+
+    const nodes = getNodeList(selector);
+
+    if (!nodes.length) {
+      log("querySelectorAll [not found]", selector);
+      return;
+    }
+
+    const nodeRecords = nodes.forEach(toNodeRecord(node));
+    log("querySelectorAllResponse", selector, nodeRecords);
+    ports.querySelectorAll.send([selector, nodeRecords]);
+  }
+
+  /**
    * Preload an image at the given URL.
    *
    * @param  {String} url
@@ -464,7 +485,6 @@ function toNodeRecord(node) {
     innerHtml: node.innerHTML || null,
     pathname: node.pathname || null,
     value: node.value || null,
-    children: node.children || null,
   };
 
   // Firefox throws an Error when JSON serializing an object with a reference to itself
