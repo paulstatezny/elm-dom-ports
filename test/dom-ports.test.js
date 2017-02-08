@@ -49,7 +49,16 @@ function mockDomNode() {
     focus: jest.fn(),
     parentNode: {
       removeChild: jest.fn()
-    }
+    },
+    style: {
+      setProperty: jest.fn(),
+      removeProperty: jest.fn()
+    },
+    dataset: {},
+    offsetTop: 10,
+    offsetLeft: 20,
+    offsetWidth: 30,
+    offsetHeight: 40
   };
 }
 
@@ -265,24 +274,169 @@ describe('dom-ports', () => {
   });
 
   describe('allowTouchScroll', () => {
+    beforeEach(() => {
+      document.removeEventListener = jest.fn();
+      port(mockPorts.allowTouchScroll)();
+    });
+
+    test('removes the touchmove event listener on document', () => {
+      expect(mockCall(document.removeEventListener)[0]).toEqual('touchmove');
+    });
+
+    test('the event listener it removes prevents default', () => {
+      const listener = mockCall(document.removeEventListener)[1];
+      const mockEvent = {preventDefault: jest.fn()};
+
+      listener(mockEvent);
+
+      expect(mockEvent.preventDefault.mock.calls).toHaveLength(1);
+    });
   });
 
   describe('setProperty', () => {
+    test('sets the given property on all matching DOM nodes', () => {
+      port(mockPorts.setProperty)(['.some-selector', 'fooBarBaz', 'testing 123']);
+
+      expect(mockNodeList[0].fooBarBaz).toEqual('testing 123');
+      expect(mockNodeList[1].fooBarBaz).toEqual('testing 123');
+      expect(mockNodeList[2].fooBarBaz).toEqual('testing 123');
+    });
   });
 
   describe('setCssProperty', () => {
+    test('sets the given CSS property on all matching DOM nodes', () => {
+      port(mockPorts.setCssProperty)(['.button', 'visibility', 'hidden']);
+
+      expect(mockCall(mockNodeList[0].style.setProperty)).toEqual(['visibility', 'hidden']);
+      expect(mockCall(mockNodeList[1].style.setProperty)).toEqual(['visibility', 'hidden']);
+      expect(mockCall(mockNodeList[2].style.setProperty)).toEqual(['visibility', 'hidden']);
+    });
   });
 
   describe('removeCssProperty', () => {
+    test('removes the given CSS property on all matching DOM nodes', () => {
+      port(mockPorts.removeCssProperty)(['.button', 'visibility']);
+
+      expect(mockCall(mockNodeList[0].style.removeProperty)).toEqual(['visibility']);
+      expect(mockCall(mockNodeList[1].style.removeProperty)).toEqual(['visibility']);
+      expect(mockCall(mockNodeList[2].style.removeProperty)).toEqual(['visibility']);
+    });
   });
 
   describe('setDataAttribute', () => {
+    test('sets the given data attribute on all matching DOM nodes', () => {
+      port(mockPorts.setDataAttribute)(['.menu-item', 'is-menu-item', 'true']);
+
+      expect(mockNodeList[0].dataset['is-menu-item']).toEqual('true');
+      expect(mockNodeList[1].dataset['is-menu-item']).toEqual('true');
+      expect(mockNodeList[2].dataset['is-menu-item']).toEqual('true');
+    });
   });
 
   describe('getNodePosition', () => {
+    test('sends the selector and a Position record to ports.nodePosition', () => {
+      port(mockPorts.getNodePosition)('.foo');
+
+      expect(portResponse(mockPorts.nodePosition)[0]).toEqual('.foo');
+
+      // Position record has top, right, bottom, and left properties that are Numbers
+      expect(portResponse(mockPorts.nodePosition)[1]).toEqual(
+        expect.objectContaining({
+          top: expect.any(Number),
+          right: expect.any(Number),
+          bottom: expect.any(Number),
+          left: expect.any(Number)
+        })
+      );
+    });
+
+    test('the top is a sum of the offsetTop of the node and its parents', () => {
+      mockNode.offsetTop = 10;
+      mockNode.offsetParent = {
+        offsetParent: {
+          offsetTop: 20
+        },
+        offsetTop: 30
+      };
+
+      port(mockPorts.getNodePosition)('.foo');
+      expect(portResponse(mockPorts.nodePosition)[1].top).toEqual(60);
+    });
+
+    test('the left is a sum of the offsetLeft of the node and its parents', () => {
+      mockNode.offsetLeft = 1;
+      mockNode.offsetParent = {
+        offsetParent: {
+          offsetLeft: 100
+        },
+        offsetLeft: 10
+      };
+
+      port(mockPorts.getNodePosition)('.foo');
+      expect(portResponse(mockPorts.nodePosition)[1].left).toEqual(111);
+    });
+
+    test('the right is a sum of the computed left plus the offsetWidth of the node', () => {
+      mockNode.offsetLeft = 1;
+      mockNode.offsetWidth = 100;
+      mockNode.offsetParent = {
+        offsetParent: {
+          offsetLeft: 100
+        },
+        offsetLeft: 10
+      };
+
+      port(mockPorts.getNodePosition)('.foo');
+      expect(portResponse(mockPorts.nodePosition)[1].right).toEqual(211);
+    });
+
+    test('the bottom is a sum of the computed left plus the offsetWidth of the node', () => {
+      mockNode.offsetTop = 10;
+      mockNode.offsetHeight = 100;
+      mockNode.offsetParent = {
+        offsetParent: {
+          offsetTop: 5
+        },
+        offsetTop: 20
+      };
+
+      port(mockPorts.getNodePosition)('.foo');
+      expect(portResponse(mockPorts.nodePosition)[1].bottom).toEqual(135);
+    });
   });
 
   describe('querySelector', () => {
+    test('calls ports.querySelectorResponse with the selector and an HtmlElement record of the first matching node', () => {
+      mockNode.checked = true;
+      mockNode.clientHeight = 123;
+      mockNode.clientWidth = 456;
+      mockNode.dataset = {foo: 'bar'};
+      mockNode.htmlFor = 'search_button';
+      mockNode.href = 'https://github.com/foo/bar/baz';
+      mockNode.id = 'test_id';
+      mockNode.innerHTML = '<span>hey</span>';
+      mockNode.pathname = '/foo/bar/baz';
+      mockNode.value = 'Phoenix, AZ';
+
+      port(mockPorts.querySelector)('.magical-button');
+
+      expect(portResponse(mockPorts.querySelectorResponse)).toEqual([
+        '.magical-button',
+        {
+          checked: true,
+          clientHeight: 123,
+          clientWidth: 456,
+          content: null,
+          data: [['foo', 'bar']],
+          for: 'search_button',
+          href: 'https://github.com/foo/bar/baz',
+          id: 'test_id',
+          innerHtml: '<span>hey</span>',
+          pathname: '/foo/bar/baz',
+          value: 'Phoenix, AZ'
+        }
+      ]);
+    });
   });
 
   describe('preloadImage', () => {
