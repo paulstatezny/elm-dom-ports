@@ -133,10 +133,6 @@ port getNodePosition : Selector -> Cmd msg
 port querySelector : Selector -> Cmd msg
 
 
--- Preloading
-port preloadImage : Url -> Cmd msg
-
-
 -- Helper Functions
 
 
