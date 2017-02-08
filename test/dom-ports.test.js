@@ -9,7 +9,6 @@ let mockPorts;
 let mockNode;
 let mockNodeList;
 let domPorts;
-let realWindow;
 
 jest.setMock('../src/dom-utils', mockDomUtils);
 
