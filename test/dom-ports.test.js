@@ -110,7 +110,6 @@ describe('dom-ports', () => {
       addSubmitListener: subscribePort(),
       addClass: subscribePort(),
       removeClass: subscribePort(),
-      toggleClass: subscribePort(),
       innerHtml: subscribePort(),
       appendChild: subscribePort(),
       removeNodes: subscribePort(),
@@ -189,9 +188,6 @@ describe('dom-ports', () => {
       expect(mockCall(mockRemoveClassCurried, 1)[0]).toEqual(mockNodeList[1]);
       expect(mockCall(mockRemoveClassCurried, 2)[0]).toEqual(mockNodeList[2]);
     });
-  });
-
-  describe('toggleClass', () => {
   });
 
   describe('innerHtml', () => {

@@ -24,7 +24,6 @@ function register(ports, log) {
   // class
   ports.addClass.subscribe(addClass);
   ports.removeClass.subscribe(removeClass);
-  ports.toggleClass.subscribe(toggleClass);
 
   // DOM Node addition/removal
   ports.innerHtml.subscribe(innerHtml);
@@ -155,26 +154,6 @@ function register(ports, log) {
     log("removeClass", selector, className);
 
     domUtils.getNodeList(selector).forEach(domUtils.removeClass(className));
-  }
-
-  /**
-   * Toggles a class from all DOM nodes that match the given selector.
-   *
-   * @param  {String} selector  DOM selector
-   * @param  {String} className The class to toggle
-   */
-  function toggleClass([selector, className]) {
-    log("toggleClass", selector, className);
-
-    domUtils.getNodeList(selector).forEach(node => {
-      const alreadyAdded = node.className.split(/\s+/).indexOf(className) > -1;
-
-      if (alreadyAdded) {
-        removeClass([selector, className]);
-      } else {
-        addClass([selector, className]);
-      }
-    });
   }
 
   /**

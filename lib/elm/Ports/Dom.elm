@@ -97,7 +97,6 @@ port addSubmitListener : (Selector, List String) -> Cmd msg
 -- class
 port addClass : (Selector, Classname) -> Cmd msg
 port removeClass : (Selector, Classname) -> Cmd msg
-port toggleClass : (Selector, Classname) -> Cmd msg
 
 
 -- DOM Node addition/removal
