@@ -438,7 +438,4 @@ describe('dom-ports', () => {
       ]);
     });
   });
-
-  describe('preloadImage', () => {
-  });
 });

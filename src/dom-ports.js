@@ -53,9 +53,6 @@ function register(ports, log) {
   ports.getNodePosition.subscribe(getNodePosition);
   ports.querySelector.subscribe(querySelector);
 
-  // Preloading
-  ports.preloadImage.subscribe(preloadImage);
-
   /**
    * Find DOM nodes and notify the Elm app whenever the given event is fired for any of them.
    *
@@ -427,17 +424,6 @@ function register(ports, log) {
     const nodeRecord = toNodeRecord(node);
     log("querySelectorResponse", selector, nodeRecord);
     ports.querySelectorResponse.send([selector, nodeRecord]);
-  }
-
-  /**
-   * Preload an image at the given URL.
-   *
-   * @param  {String} url
-   */
-  function preloadImage(url) {
-    log("preloadImage", url);
-
-    new Image().src = url;
   }
 }
 
