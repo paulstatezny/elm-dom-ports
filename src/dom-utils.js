@@ -47,7 +47,6 @@ const addClass = (className) => (node) => {
 };
 
 const removeClass = (className) => (node) => {
-  console.log(escapeRegExp(className));
   let regExp = new RegExp(
     `(^|\\s)${escapeRegExp(className)}\\s*`,
     'g'
