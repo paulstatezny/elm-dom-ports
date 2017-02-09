@@ -9,7 +9,6 @@ let mockPorts;
 let mockNode;
 let mockNodeList;
 let domPorts;
-let realWindow;
 
 jest.setMock('../src/dom-utils', mockDomUtils);
 
@@ -58,7 +57,9 @@ function mockDomNode() {
     offsetTop: 10,
     offsetLeft: 20,
     offsetWidth: 30,
-    offsetHeight: 40
+    offsetHeight: 40,
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn()
   };
 }
 
@@ -71,7 +72,8 @@ let originalWindow = {
 };
 
 let originalDocument = {
-  addEventListener: document.addEventListener
+  addEventListener: document.addEventListener,
+  createElement: document.createElement
 };
 
 /**
@@ -82,6 +84,7 @@ describe('dom-ports', () => {
   afterAll(() => {
     window.scrollTo = originalWindow.scrollTo
     document.addEventListener = originalDocument.addEventListener;
+    document.createElement = originalDocument.createElement;
   });
 
   beforeEach(() => {
@@ -111,7 +114,6 @@ describe('dom-ports', () => {
       addSubmitListener: subscribePort(),
       addClass: subscribePort(),
       removeClass: subscribePort(),
-      toggleClass: subscribePort(),
       innerHtml: subscribePort(),
       appendChild: subscribePort(),
       removeNodes: subscribePort(),
@@ -152,12 +154,145 @@ describe('dom-ports', () => {
   });
 
   describe('addEventListener', () => {
+    test('adds an event listener for the given event to all matching DOM nodes', () => {
+      port(mockPorts.addEventListener)(['.button', 'click', null]);
+
+      expect(mockCall(mockNodeList[0].addEventListener)[0]).toEqual('click');
+      expect(mockCall(mockNodeList[1].addEventListener)[0]).toEqual('click');
+      expect(mockCall(mockNodeList[2].addEventListener)[0]).toEqual('click');
+    });
+
+    test('calls preventDefault if no options are given', () => {
+      port(mockPorts.addEventListener)(['.button', 'click', null]);
+
+      const listener = mockCall(mockNodeList[0].addEventListener)[1];
+      const event = {preventDefault: jest.fn()};
+
+      listener(event);
+
+      expect(event.preventDefault.mock.calls.length).toEqual(1);
+    });
+
+    test('does not call preventDefault if specified not to in options', () => {
+      port(mockPorts.addEventListener)(['.button', 'click', {preventDefault: false}]);
+
+      const listener = mockCall(mockNodeList[0].addEventListener)[1];
+      const event = {preventDefault: jest.fn()};
+
+      listener(event);
+
+      expect(event.preventDefault.mock.calls.length).toEqual(0);
+    });
+
+    test('calls stopPropagation if that is specified in the options', () => {
+      port(mockPorts.addEventListener)(['.button', 'click', {stopPropagation: true}]);
+
+      const listener = mockCall(mockNodeList[0].addEventListener)[1];
+      const event = {stopPropagation: jest.fn()};
+
+      listener(event);
+
+      expect(event.stopPropagation.mock.calls.length).toEqual(1);
+    });
+
+    test('calls a return port in the form onEvent where Event is the given event with an upper first letter', () => {
+      port(mockPorts.addEventListener)(['.button', 'paste', null]);
+
+      const listener = mockCall(mockNodeList[0].addEventListener)[1];
+      listener({preventDefault: jest.fn()});
+
+      expect(mockPorts.onPaste.send.mock.calls.length).toEqual(1);
+    });
+
+    test('passes Elm HtmlElement and Event shaped objects to the return port', () => {
+      port(mockPorts.addEventListener)(['.button', 'paste', null]);
+
+      mockNodeList[0].checked = true;
+      mockNodeList[0].clientHeight = 1;
+      mockNodeList[0].clientWidth = 2;
+      mockNodeList[0].content = '';
+      mockNodeList[0].dataset = {foo: 'bar'};
+      mockNodeList[0].htmlFor = 'test';
+      mockNodeList[0].href = 'foo://bar';
+      mockNodeList[0].id = 'testing_123';
+      mockNodeList[0].innerHTML = '<b>yo</b>';
+      mockNodeList[0].pathname = '/foo/bar-baz';
+      mockNodeList[0].value = 'exceeding';
+
+      const listener = mockCall(mockNodeList[0].addEventListener)[1];
+      listener({
+        preventDefault: jest.fn(),
+        clientX: 3,
+        clientY: 4,
+        keyCode: 5
+      });
+
+      expect(mockPorts.onPaste.send).toHaveBeenCalledWith([
+        expect.anything(),
+        {
+          checked: true,
+          clientHeight: 1,
+          clientWidth: 2,
+          content: null,
+          data: [['foo', 'bar']],
+          for: 'test',
+          href: 'foo://bar',
+          id: 'testing_123',
+          innerHtml: '<b>yo</b>',
+          pathname: '/foo/bar-baz',
+          value: 'exceeding'
+        },
+        {
+          clientX: 3,
+          clientY: 4,
+          keyCode: 5,
+          touchClientX: null,
+          touchClientY: null
+        }
+      ]);
+    });
   });
 
   describe('addClickListener', () => {
+    test('adds a click listener for the given event to all matching DOM nodes', () => {
+      port(mockPorts.addClickListener)(['.button', 'click', null]);
+
+      expect(mockCall(mockNodeList[0].addEventListener)[0]).toEqual('click');
+      expect(mockCall(mockNodeList[1].addEventListener)[0]).toEqual('click');
+      expect(mockCall(mockNodeList[2].addEventListener)[0]).toEqual('click');
+    });
   });
 
   describe('addSubmitListener', () => {
+    beforeEach(() => {
+      port(mockPorts.addSubmitListener)(['.my-form', ['name', 'email']]);
+    });
+
+    test('adds a submit listener for the given event to all matching DOM nodes', () => {
+      expect(mockCall(mockNodeList[0].addEventListener)[0]).toEqual('submit');
+      expect(mockCall(mockNodeList[1].addEventListener)[0]).toEqual('submit');
+      expect(mockCall(mockNodeList[2].addEventListener)[0]).toEqual('submit');
+    });
+
+    test('passes the data from the requested fields in the event listener', () => {
+      const listener = mockCall(mockNodeList[0].addEventListener)[1];
+
+      listener({
+        currentTarget: {
+          name: {value: 'Elon Musk'},
+          email: {value: 'elon@tesla.com'},
+        },
+        preventDefault: jest.fn()
+      });
+
+      expect(mockPorts.onSubmit.send).toHaveBeenCalledWith([
+        '.my-form',
+        {
+          name: 'Elon Musk',
+          email: 'elon@tesla.com',
+        }
+      ]);
+    });
   });
 
   describe('addClass', () => {
@@ -192,9 +327,6 @@ describe('dom-ports', () => {
     });
   });
 
-  describe('toggleClass', () => {
-  });
-
   describe('innerHtml', () => {
     test('node.innerHTML is set to the given HTML string for matching DOM nodes', () => {
       port(mockPorts.innerHtml)(['#some_id', '<span>Hello test world</span>']);
@@ -206,6 +338,25 @@ describe('dom-ports', () => {
   });
 
   describe('appendChild', () => {
+    let mockTemplate;
+
+    beforeEach(() => {
+      mockTemplate = {
+        content: {
+          firstChild: {}
+        }
+      };
+
+      document.createElement = jest.fn(() => mockTemplate);
+
+      mockNode.appendChild = jest.fn();
+
+      port(mockPorts.appendChild)(['.foo', '<span>hi</span>']);
+    });
+
+    test('creates a DOM node from the rawHtml and appends the first child to the node', () => {
+      expect(mockNode.appendChild).toHaveBeenCalledWith(mockTemplate.content.firstChild);
+    });
   });
 
   describe('removeNodes', () => {
