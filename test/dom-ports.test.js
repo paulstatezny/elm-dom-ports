@@ -16,20 +16,6 @@ jest.setMock('../src/dom-utils', mockDomUtils);
  * Test setup functions
  */
 
-function portResponse(portFn, responseNumber) {
-  const call = portFn.send.mock.calls[0];
-
-  if (!call) {
-    throw `call number ${responseNumber || 0} doesn't exist`;
-  }
-
-  return call[responseNumber || 0];
-}
-
-function mockCall(mockFn, callNumber) {
-  return mockFn.mock.calls[callNumber || 0];
-}
-
 function port(portFn) {
   return portFn.subscribe.mock.calls[0][0];
 }
@@ -157,15 +143,15 @@ describe('dom-ports', () => {
     test('adds an event listener for the given event to all matching DOM nodes', () => {
       port(mockPorts.addEventListener)(['.button', 'click', null]);
 
-      expect(mockCall(mockNodeList[0].addEventListener)[0]).toEqual('click');
-      expect(mockCall(mockNodeList[1].addEventListener)[0]).toEqual('click');
-      expect(mockCall(mockNodeList[2].addEventListener)[0]).toEqual('click');
+      expect(mockNodeList[0].addEventListener).toHaveBeenCalledWith('click', expect.anything(), expect.anything());
+      expect(mockNodeList[1].addEventListener).toHaveBeenCalledWith('click', expect.anything(), expect.anything());
+      expect(mockNodeList[2].addEventListener).toHaveBeenCalledWith('click', expect.anything(), expect.anything());
     });
 
     test('calls preventDefault if no options are given', () => {
       port(mockPorts.addEventListener)(['.button', 'click', null]);
 
-      const listener = mockCall(mockNodeList[0].addEventListener)[1];
+      const listener = mockNodeList[0].addEventListener.mock.calls[0][1];
       const event = {preventDefault: jest.fn()};
 
       listener(event);
@@ -176,7 +162,7 @@ describe('dom-ports', () => {
     test('does not call preventDefault if specified not to in options', () => {
       port(mockPorts.addEventListener)(['.button', 'click', {preventDefault: false}]);
 
-      const listener = mockCall(mockNodeList[0].addEventListener)[1];
+      const listener = mockNodeList[0].addEventListener.mock.calls[0][1];
       const event = {preventDefault: jest.fn()};
 
       listener(event);
@@ -187,7 +173,7 @@ describe('dom-ports', () => {
     test('calls stopPropagation if that is specified in the options', () => {
       port(mockPorts.addEventListener)(['.button', 'click', {stopPropagation: true}]);
 
-      const listener = mockCall(mockNodeList[0].addEventListener)[1];
+      const listener = mockNodeList[0].addEventListener.mock.calls[0][1];
       const event = {stopPropagation: jest.fn()};
 
       listener(event);
@@ -198,7 +184,7 @@ describe('dom-ports', () => {
     test('calls a return port in the form onEvent where Event is the given event with an upper first letter', () => {
       port(mockPorts.addEventListener)(['.button', 'paste', null]);
 
-      const listener = mockCall(mockNodeList[0].addEventListener)[1];
+      const listener = mockNodeList[0].addEventListener.mock.calls[0][1];
       listener({preventDefault: jest.fn()});
 
       expect(mockPorts.onPaste.send.mock.calls.length).toEqual(1);
@@ -219,7 +205,7 @@ describe('dom-ports', () => {
       mockNodeList[0].pathname = '/foo/bar-baz';
       mockNodeList[0].value = 'exceeding';
 
-      const listener = mockCall(mockNodeList[0].addEventListener)[1];
+      const listener = mockNodeList[0].addEventListener.mock.calls[0][1];
       listener({
         preventDefault: jest.fn(),
         clientX: 3,
@@ -257,9 +243,9 @@ describe('dom-ports', () => {
     test('adds a click listener for the given event to all matching DOM nodes', () => {
       port(mockPorts.addClickListener)(['.button', 'click', null]);
 
-      expect(mockCall(mockNodeList[0].addEventListener)[0]).toEqual('click');
-      expect(mockCall(mockNodeList[1].addEventListener)[0]).toEqual('click');
-      expect(mockCall(mockNodeList[2].addEventListener)[0]).toEqual('click');
+      expect(mockNodeList[0].addEventListener).toHaveBeenCalledWith('click', expect.anything(), expect.anything());
+      expect(mockNodeList[1].addEventListener).toHaveBeenCalledWith('click', expect.anything(), expect.anything());
+      expect(mockNodeList[2].addEventListener).toHaveBeenCalledWith('click', expect.anything(), expect.anything());
     });
   });
 
@@ -269,13 +255,13 @@ describe('dom-ports', () => {
     });
 
     test('adds a submit listener for the given event to all matching DOM nodes', () => {
-      expect(mockCall(mockNodeList[0].addEventListener)[0]).toEqual('submit');
-      expect(mockCall(mockNodeList[1].addEventListener)[0]).toEqual('submit');
-      expect(mockCall(mockNodeList[2].addEventListener)[0]).toEqual('submit');
+      expect(mockNodeList[0].addEventListener).toHaveBeenCalledWith('submit', expect.anything());
+      expect(mockNodeList[1].addEventListener).toHaveBeenCalledWith('submit', expect.anything());
+      expect(mockNodeList[2].addEventListener).toHaveBeenCalledWith('submit', expect.anything());
     });
 
     test('passes the data from the requested fields in the event listener', () => {
-      const listener = mockCall(mockNodeList[0].addEventListener)[1];
+      const listener = mockNodeList[0].addEventListener.mock.calls[0][1];
 
       listener({
         currentTarget: {
@@ -301,13 +287,13 @@ describe('dom-ports', () => {
     });
 
     test('the given class is added', () => {
-      expect(mockCall(mockDomUtils.addClass)).toEqual(['foo--active-class']);
+      expect(mockDomUtils.addClass).toHaveBeenCalledWith('foo--active-class');
     });
 
     test('adds the class to matching DOM nodes', () => {
-      expect(mockCall(mockAddClassCurried, 0)[0]).toEqual(mockNodeList[0]);
-      expect(mockCall(mockAddClassCurried, 1)[0]).toEqual(mockNodeList[1]);
-      expect(mockCall(mockAddClassCurried, 2)[0]).toEqual(mockNodeList[2]);
+      expect(mockAddClassCurried).toHaveBeenCalledWith(mockNodeList[0], expect.anything(), expect.anything());
+      expect(mockAddClassCurried).toHaveBeenCalledWith(mockNodeList[1], expect.anything(), expect.anything());
+      expect(mockAddClassCurried).toHaveBeenCalledWith(mockNodeList[2], expect.anything(), expect.anything());
     });
   });
 
@@ -317,13 +303,13 @@ describe('dom-ports', () => {
     });
 
     test('the given class is added', () => {
-      expect(mockCall(mockDomUtils.removeClass)).toEqual(['bar--active-class']);
+      expect(mockDomUtils.removeClass).toHaveBeenCalledWith('bar--active-class');
     });
 
     test('adds the class to matching DOM nodes', () => {
-      expect(mockCall(mockRemoveClassCurried, 0)[0]).toEqual(mockNodeList[0]);
-      expect(mockCall(mockRemoveClassCurried, 1)[0]).toEqual(mockNodeList[1]);
-      expect(mockCall(mockRemoveClassCurried, 2)[0]).toEqual(mockNodeList[2]);
+      expect(mockRemoveClassCurried).toHaveBeenCalledWith(mockNodeList[0], expect.anything(), expect.anything());
+      expect(mockRemoveClassCurried).toHaveBeenCalledWith(mockNodeList[1], expect.anything(), expect.anything());
+      expect(mockRemoveClassCurried).toHaveBeenCalledWith(mockNodeList[2], expect.anything(), expect.anything());
     });
   });
 
@@ -363,9 +349,9 @@ describe('dom-ports', () => {
     test('calls node.parentNode.removeChild(node) for matching DOM nodes', () => {
       port(mockPorts.removeNodes)('.no-longer-needed');
 
-      expect(mockCall(mockNodeList[0].parentNode.removeChild)).toEqual([mockNodeList[0]]);
-      expect(mockCall(mockNodeList[1].parentNode.removeChild)).toEqual([mockNodeList[1]]);
-      expect(mockCall(mockNodeList[2].parentNode.removeChild)).toEqual([mockNodeList[2]]);
+      expect(mockNodeList[0].parentNode.removeChild).toHaveBeenCalledWith(mockNodeList[0]);
+      expect(mockNodeList[1].parentNode.removeChild).toHaveBeenCalledWith(mockNodeList[1]);
+      expect(mockNodeList[2].parentNode.removeChild).toHaveBeenCalledWith(mockNodeList[2]);
     });
   });
 
@@ -373,9 +359,9 @@ describe('dom-ports', () => {
     test('simulates a click on matching DOM nodes', () => {
       port(mockPorts.click)('button.auto-click-for-some-reason');
 
-      expect(mockCall(mockNodeList[0].click)).toEqual([]); // Empty array denotes a call with 0 args
-      expect(mockCall(mockNodeList[1].click)).toEqual([]);
-      expect(mockCall(mockNodeList[2].click)).toEqual([]);
+      expect(mockNodeList[0].click).toHaveBeenCalled();
+      expect(mockNodeList[1].click).toHaveBeenCalled();
+      expect(mockNodeList[2].click).toHaveBeenCalled();
     });
   });
 
@@ -383,7 +369,7 @@ describe('dom-ports', () => {
     test('focused on the first matching DOM node', () => {
       port(mockPorts.focus)('input.of-interest');
 
-      expect(mockCall(mockNode.focus)).toEqual([]); // Empty array denotes a call with 0 args
+      expect(mockNode.focus).toHaveBeenCalled();
     });
   });
 
@@ -391,7 +377,7 @@ describe('dom-ports', () => {
     test('calls window.scrollTo(x,y) with the given coordinates', () => {
       window.scrollTo = jest.fn();
       port(mockPorts.windowScrollTo)([350, 100.05]);
-      expect(mockCall(window.scrollTo)).toEqual([350, 100.05]);
+      expect(window.scrollTo).toHaveBeenCalledWith(350, 100.05);
     });
   });
 
@@ -400,7 +386,7 @@ describe('dom-ports', () => {
       window.scrollTo = jest.fn();
       mockNode.offsetTop = 1024;
       port(mockPorts.windowScrollToSelector)('#some_selector');
-      expect(mockCall(window.scrollTo)).toEqual([0, 1024]);
+      expect(window.scrollTo).toHaveBeenCalledWith(0, 1024);
     });
   });
 
@@ -411,11 +397,11 @@ describe('dom-ports', () => {
     });
 
     test('adds a touchmove event listener on document', () => {
-      expect(mockCall(document.addEventListener)[0]).toEqual('touchmove');
+      expect(document.addEventListener).toHaveBeenCalledWith('touchmove', expect.anything());
     });
 
     test('the event listener prevents default', () => {
-      const listener = mockCall(document.addEventListener)[1];
+      const listener = document.addEventListener.mock.calls[0][1];
       const mockEvent = {preventDefault: jest.fn()};
 
       listener(mockEvent);
@@ -431,11 +417,11 @@ describe('dom-ports', () => {
     });
 
     test('removes the touchmove event listener on document', () => {
-      expect(mockCall(document.removeEventListener)[0]).toEqual('touchmove');
+      expect(document.removeEventListener).toHaveBeenCalledWith('touchmove', expect.anything());
     });
 
     test('the event listener it removes prevents default', () => {
-      const listener = mockCall(document.removeEventListener)[1];
+      const listener = document.removeEventListener.mock.calls[0][1];
       const mockEvent = {preventDefault: jest.fn()};
 
       listener(mockEvent);
@@ -458,9 +444,9 @@ describe('dom-ports', () => {
     test('sets the given CSS property on all matching DOM nodes', () => {
       port(mockPorts.setCssProperty)(['.button', 'visibility', 'hidden']);
 
-      expect(mockCall(mockNodeList[0].style.setProperty)).toEqual(['visibility', 'hidden']);
-      expect(mockCall(mockNodeList[1].style.setProperty)).toEqual(['visibility', 'hidden']);
-      expect(mockCall(mockNodeList[2].style.setProperty)).toEqual(['visibility', 'hidden']);
+      expect(mockNodeList[0].style.setProperty).toHaveBeenCalledWith('visibility', 'hidden');
+      expect(mockNodeList[1].style.setProperty).toHaveBeenCalledWith('visibility', 'hidden');
+      expect(mockNodeList[2].style.setProperty).toHaveBeenCalledWith('visibility', 'hidden');
     });
   });
 
@@ -468,9 +454,9 @@ describe('dom-ports', () => {
     test('removes the given CSS property on all matching DOM nodes', () => {
       port(mockPorts.removeCssProperty)(['.button', 'visibility']);
 
-      expect(mockCall(mockNodeList[0].style.removeProperty)).toEqual(['visibility']);
-      expect(mockCall(mockNodeList[1].style.removeProperty)).toEqual(['visibility']);
-      expect(mockCall(mockNodeList[2].style.removeProperty)).toEqual(['visibility']);
+      expect(mockNodeList[0].style.removeProperty).toHaveBeenCalledWith('visibility');
+      expect(mockNodeList[1].style.removeProperty).toHaveBeenCalledWith('visibility');
+      expect(mockNodeList[2].style.removeProperty).toHaveBeenCalledWith('visibility');
     });
   });
 
@@ -488,17 +474,15 @@ describe('dom-ports', () => {
     test('sends the selector and a Position record to ports.nodePosition', () => {
       port(mockPorts.getNodePosition)('.foo');
 
-      expect(portResponse(mockPorts.nodePosition)[0]).toEqual('.foo');
-
-      // Position record has top, right, bottom, and left properties that are Numbers
-      expect(portResponse(mockPorts.nodePosition)[1]).toEqual(
+      expect(mockPorts.nodePosition.send).toHaveBeenCalledWith([
+        '.foo',
         expect.objectContaining({
           top: expect.any(Number),
           right: expect.any(Number),
           bottom: expect.any(Number),
           left: expect.any(Number)
         })
-      );
+      ]);
     });
 
     test('the top is a sum of the offsetTop of the node and its parents', () => {
@@ -511,7 +495,10 @@ describe('dom-ports', () => {
       };
 
       port(mockPorts.getNodePosition)('.foo');
-      expect(portResponse(mockPorts.nodePosition)[1].top).toEqual(60);
+      expect(mockPorts.nodePosition.send).toHaveBeenCalledWith([
+        expect.anything(),
+        expect.objectContaining({top: 60})
+      ]);
     });
 
     test('the left is a sum of the offsetLeft of the node and its parents', () => {
@@ -524,7 +511,10 @@ describe('dom-ports', () => {
       };
 
       port(mockPorts.getNodePosition)('.foo');
-      expect(portResponse(mockPorts.nodePosition)[1].left).toEqual(111);
+      expect(mockPorts.nodePosition.send).toHaveBeenCalledWith([
+        expect.anything(),
+        expect.objectContaining({left: 111})
+      ]);
     });
 
     test('the right is a sum of the computed left plus the offsetWidth of the node', () => {
@@ -538,7 +528,10 @@ describe('dom-ports', () => {
       };
 
       port(mockPorts.getNodePosition)('.foo');
-      expect(portResponse(mockPorts.nodePosition)[1].right).toEqual(211);
+      expect(mockPorts.nodePosition.send).toHaveBeenCalledWith([
+        expect.anything(),
+        expect.objectContaining({right: 211})
+      ]);
     });
 
     test('the bottom is a sum of the computed left plus the offsetWidth of the node', () => {
@@ -552,7 +545,10 @@ describe('dom-ports', () => {
       };
 
       port(mockPorts.getNodePosition)('.foo');
-      expect(portResponse(mockPorts.nodePosition)[1].bottom).toEqual(135);
+      expect(mockPorts.nodePosition.send).toHaveBeenCalledWith([
+        expect.anything(),
+        expect.objectContaining({bottom: 135})
+      ]);
     });
   });
 
@@ -571,7 +567,7 @@ describe('dom-ports', () => {
 
       port(mockPorts.querySelector)('.magical-button');
 
-      expect(portResponse(mockPorts.querySelectorResponse)).toEqual([
+      expect(mockPorts.querySelectorResponse.send).toHaveBeenCalledWith([
         '.magical-button',
         {
           checked: true,
