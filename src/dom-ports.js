@@ -116,11 +116,9 @@ function register(ports, log) {
         e.preventDefault();
 
         const payload = fields.reduce((acc, field) => {
-          const node = e.currentTarget[field];
+          const nodeOrNodeList = e.currentTarget[field];
 
-          acc[field.toLowerCase()] = node.type === "checkbox"
-            ? node.checked
-            : node.value;
+          acc[field.toLowerCase()] = formFieldValue(nodeOrNodeList);
 
           return acc;
         }, {});
@@ -498,6 +496,37 @@ function sumNodePropertyWithAncestors(property, sum, node) {
 
 function preventDefault(event) {
   event.preventDefault();
+}
+
+/**
+ * Get the value of a form field in the form of an HtmlElement or NodeList
+ *
+ * @param  {HtmlElement|NodeList} nodeOrNodeList Some kind of DOM node or NodeList
+ * @return {String|Boolean|null}                 null if no value found, bool for checkboxes
+ */
+function formFieldValue(nodeOrNodeList) {
+  if (nodeOrNodeList.type === "checkbox") {
+    return nodeOrNodeList.checked;
+  } else if (nodeOrNodeList.value !== undefined) {
+    // Handle `HTMLInputElement`, `HtmlSelectElement`, `HtmlTextAreaElement`, and `RadioNodeList`
+    return nodeOrNodeList.value;
+  } else if (nodeOrNodeList instanceof NodeList && nodeOrNodeList[0].type === "radio") {
+    // Safari 9: NodeList is a list of HTMLInputElement objects with type="radio"
+    // Let's find the "checked" item
+    for (node in nodeOrNodeList) {
+      if (node === "length") {
+        continue;
+      }
+
+      if (nodeOrNodeList[node].checked === true) {
+        return nodeOrNodeList[node].value;
+      }
+    }
+
+    return null;
+  }
+
+  return null;
 }
 
 function throwMissingAddEventListenerError(message, object) {
