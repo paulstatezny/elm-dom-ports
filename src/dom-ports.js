@@ -410,18 +410,18 @@ function register(ports, log) {
    * @param  {String} selector DOM selector
    */
   function querySelectorAll(selector) {
-    log("querySelector", selector);
+    log("querySelectorAll", selector);
 
-    const nodes = getNodeList(selector);
+    const nodes = domUtils.getNodeList(selector);
 
     if (!nodes.length) {
       log("querySelectorAll [not found]", selector);
       return;
     }
 
-    const nodeRecords = nodes.forEach(toNodeRecord(node));
+    const nodeRecords = nodes.map(n => toNodeRecord(n));
     log("querySelectorAllResponse", selector, nodeRecords);
-    ports.querySelectorAll.send([selector, nodeRecords]);
+    ports.querySelectorAllResponse.send([selector, nodeRecords]);
   }
 }
 
@@ -433,7 +433,7 @@ function register(ports, log) {
  */
 function toNodeRecord(node) {
   const nodeRecord = {
-    checked: node.checked || null,
+    checked: node.checked === undefined ? null : node.checked,
     clientHeight: node.clientHeight || null,
     clientWidth: node.clientWidth || null,
     content: node.content || null,

@@ -82,6 +82,7 @@ port onResize : ((Selector, HtmlElement, Event) -> msg) -> Sub msg
 port innerHtmlReplaced : (Selector -> msg) -> Sub msg
 port nodePosition : ((Selector, Position) -> msg) -> Sub msg
 port querySelectorResponse : ((Selector, HtmlElement) -> msg) -> Sub msg
+port querySelectorAllResponse : ((Selector, List HtmlElement) -> msg) -> Sub msg
 port appendChildSuccess : ((Selector, RawHtml) -> msg) -> Sub msg
 
 

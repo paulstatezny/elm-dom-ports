@@ -115,6 +115,7 @@ describe('dom-ports', () => {
       setDataAttribute: subscribePort(),
       getNodePosition: subscribePort(),
       querySelector: subscribePort(),
+      querySelectorAll: subscribePort(),
       preloadImage: subscribePort(),
 
       onSubmit: sendPort(),
@@ -133,6 +134,7 @@ describe('dom-ports', () => {
       innerHtmlReplaced: sendPort(),
       nodePosition: sendPort(),
       querySelectorResponse: sendPort(),
+      querySelectorAllResponse: sendPort(),
       appendChildSuccess: sendPort()
     };
 
@@ -582,6 +584,90 @@ describe('dom-ports', () => {
           pathname: '/foo/bar/baz',
           value: 'Phoenix, AZ'
         }
+      ]);
+    });
+  });
+
+  describe('querySelectorAll', () => {
+    test('calls ports.querySelectorAllResponse with the selector and a list of HtmlElement records containing all matching nodes', () => {
+      mockNodeList[0].checked = true;
+      mockNodeList[0].clientHeight = 123;
+      mockNodeList[0].clientWidth = 456;
+      mockNodeList[0].dataset = {foo: 'bar'};
+      mockNodeList[0].htmlFor = 'search_button';
+      mockNodeList[0].href = 'http://www.google.com/testing/123';
+      mockNodeList[0].id = 'test_id';
+      mockNodeList[0].innerHTML = '<a id="test_id" data-foo="bar" href="http://www.google.com/testing/123">Google</a>';
+      mockNodeList[0].pathname = '/testing/123';
+      mockNodeList[0].value = 'Phoenix, AZ';
+
+      mockNodeList[1].checked = false;
+      mockNodeList[1].clientHeight = 234;
+      mockNodeList[1].clientWidth = 567;
+      mockNodeList[1].dataset = {baz: 'qux'};
+      mockNodeList[1].htmlFor = 'search_button2';
+      mockNodeList[1].href = 'http://www.altavista.com/testing/456';
+      mockNodeList[1].id = 'alta_vista';
+      mockNodeList[1].innerHTML = '<a id="alta_vista" data-baz="qux" href="http://www.altavista.com/testing/456">AltaVista</a>';
+      mockNodeList[1].pathname = '/testing/456';
+      mockNodeList[1].value = 'Palo Alto, CA';
+
+      mockNodeList[2].checked = undefined;
+      mockNodeList[2].clientHeight = 345;
+      mockNodeList[2].clientWidth = 678;
+      mockNodeList[2].dataset = {food: 'barn'};
+      mockNodeList[2].htmlFor = 'search_button3';
+      mockNodeList[2].href = 'http://www.yahoo.com/testing/789';
+      mockNodeList[2].id = 'yahoo';
+      mockNodeList[2].innerHTML = '<a id="yahoo" data-baz="qux" href="http://www.yahoo.com/testing/789">Yahoo</a>';
+      mockNodeList[2].pathname = '/testing/789';
+      mockNodeList[2].value = 'Sunnyvale, CA';
+
+      port(mockPorts.querySelectorAll)('.outbound-link');
+
+      expect(mockPorts.querySelectorAllResponse.send).toHaveBeenCalledWith([
+        '.outbound-link',
+        [
+          {
+            checked: true,
+            clientHeight: 123,
+            clientWidth: 456,
+            content: null,
+            data: [['foo', 'bar']],
+            for: 'search_button',
+            href: 'http://www.google.com/testing/123',
+            id: 'test_id',
+            innerHtml: '<a id="test_id" data-foo="bar" href="http://www.google.com/testing/123">Google</a>',
+            pathname: '/testing/123',
+            value: 'Phoenix, AZ'
+          },
+          {
+            checked: false,
+            clientHeight: 234,
+            clientWidth: 567,
+            content: null,
+            data: [['baz', 'qux']],
+            for: 'search_button2',
+            href: 'http://www.altavista.com/testing/456',
+            id: 'alta_vista',
+            innerHtml: '<a id="alta_vista" data-baz="qux" href="http://www.altavista.com/testing/456">AltaVista</a>',
+            pathname: '/testing/456',
+            value: 'Palo Alto, CA'
+          },
+          {
+            checked: null,
+            clientHeight: 345,
+            clientWidth: 678,
+            content: null,
+            data: [['food', 'barn']],
+            for: 'search_button3',
+            href: 'http://www.yahoo.com/testing/789',
+            id: 'yahoo',
+            innerHtml: '<a id="yahoo" data-baz="qux" href="http://www.yahoo.com/testing/789">Yahoo</a>',
+            pathname: '/testing/789',
+            value: 'Sunnyvale, CA'
+          }
+        ]
       ]);
     });
   });
