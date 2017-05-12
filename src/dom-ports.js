@@ -51,6 +51,7 @@ function register(ports, log) {
   // DOM inspection
   ports.getNodePosition.subscribe(getNodePosition);
   ports.querySelector.subscribe(querySelector);
+  ports.querySelectorAll.subscribe(querySelectorAll);
 
   /**
    * Find DOM nodes and notify the Elm app whenever the given event is fired for any of them.
@@ -402,6 +403,26 @@ function register(ports, log) {
     log("querySelectorResponse", selector, nodeRecord);
     ports.querySelectorResponse.send([selector, nodeRecord]);
   }
+
+  /**
+   * Send the Elm app an HtmlElement record of the all the DOM nodes matching the given selector.
+   *
+   * @param  {String} selector DOM selector
+   */
+  function querySelectorAll(selector) {
+    log("querySelectorAll", selector);
+
+    const nodes = domUtils.getNodeList(selector);
+
+    if (!nodes.length) {
+      log("querySelectorAll [not found]", selector);
+      return;
+    }
+
+    const nodeRecords = nodes.map(n => toNodeRecord(n));
+    log("querySelectorAllResponse", selector, nodeRecords);
+    ports.querySelectorAllResponse.send([selector, nodeRecords]);
+  }
 }
 
 /**
@@ -412,7 +433,7 @@ function register(ports, log) {
  */
 function toNodeRecord(node) {
   const nodeRecord = {
-    checked: node.checked || null,
+    checked: node.checked === undefined ? null : node.checked,
     clientHeight: node.clientHeight || null,
     clientWidth: node.clientWidth || null,
     content: node.content || null,
