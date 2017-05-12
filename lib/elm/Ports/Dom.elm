@@ -97,7 +97,6 @@ port addSubmitListener : (Selector, List String) -> Cmd msg
 -- class
 port addClass : (Selector, Classname) -> Cmd msg
 port removeClass : (Selector, Classname) -> Cmd msg
-port toggleClass : (Selector, Classname) -> Cmd msg
 
 
 -- DOM Node addition/removal
@@ -132,10 +131,6 @@ port setDataAttribute : (Selector, DataKey, DataValue) -> Cmd msg
 port getNodePosition : Selector -> Cmd msg
 port querySelector : Selector -> Cmd msg
 port querySelectorAll : Selector -> Cmd msg
-
-
--- Preloading
-port preloadImage : Url -> Cmd msg
 
 
 -- Helper Functions

@@ -1,10 +1,9 @@
 module.exports = {
   register: register,
-  samplePortName: "addClickListener"
+  samplePortName: "addEventListener"
 };
 
 const domUtils = require("./dom-utils");
-const { getNode, getNodeList } = domUtils;
 
 /**
  * Subscribe the given Elm app ports to all DOM ports from the Elm DomPorts module.
@@ -13,12 +12,10 @@ const { getNode, getNodeList } = domUtils;
  * @param {Function} log    Function to log ports for the given Elm app
  */
 function register(ports, log) {
+  log = log || function() {};
+
   // event listeners
   const addListener = ([selector, event, options]) => addEventListener(selector, event, options);
-
-  if (! ports.addEventListener) {
-    throwMissingAddEventListenerError("Cannot attach DOM ports; ports.addEventListener is not a function");
-  }
 
   ports.addEventListener.subscribe(addListener);
   ports.addClickListener.subscribe(selector => addListener([selector, "click"]));
@@ -27,7 +24,6 @@ function register(ports, log) {
   // class
   ports.addClass.subscribe(addClass);
   ports.removeClass.subscribe(removeClass);
-  ports.toggleClass.subscribe(toggleClass);
 
   // DOM Node addition/removal
   ports.innerHtml.subscribe(innerHtml);
@@ -57,9 +53,6 @@ function register(ports, log) {
   ports.querySelector.subscribe(querySelector);
   ports.querySelectorAll.subscribe(querySelectorAll);
 
-  // Preloading
-  ports.preloadImage.subscribe(preloadImage);
-
   /**
    * Find DOM nodes and notify the Elm app whenever the given event is fired for any of them.
    *
@@ -69,7 +62,7 @@ function register(ports, log) {
   function addEventListener(selector, event, options) {
     log("addEventListener", selector, event, options);
     const returnEvent = "on" + event.charAt(0).toUpperCase() + event.slice(1);
-    const nodes = getNodeList(selector);
+    const nodes = domUtils.getNodeList(selector);
 
     nodes.forEach(node => {
       if (! node.addEventListener) {
@@ -110,7 +103,7 @@ function register(ports, log) {
   function addSubmitListener(selector, fields) {
     log("addSubmitListener", selector, fields);
 
-    getNodeList(selector).forEach(node => {
+    domUtils.getNodeList(selector).forEach(node => {
       if (! node.addEventListener) {
         throwMissingAddEventListenerError(
           "Cannot add submit listener to node with selector "
@@ -124,11 +117,9 @@ function register(ports, log) {
         e.preventDefault();
 
         const payload = fields.reduce((acc, field) => {
-          const node = e.currentTarget[field];
+          const nodeOrNodeList = e.currentTarget[field];
 
-          acc[field.toLowerCase()] = node.type === "checkbox"
-            ? node.checked
-            : node.value;
+          acc[field.toLowerCase()] = formFieldValue(nodeOrNodeList);
 
           return acc;
         }, {});
@@ -149,7 +140,7 @@ function register(ports, log) {
   function addClass([selector, className]) {
     log("addClass", selector, className);
 
-    getNodeList(selector).forEach(domUtils.addClass(className));
+    domUtils.getNodeList(selector).forEach(domUtils.addClass(className));
   }
 
   /**
@@ -161,34 +152,7 @@ function register(ports, log) {
   function removeClass([selector, className]) {
     log("removeClass", selector, className);
 
-    getNodeList(selector).forEach(node => {
-      let regExp = new RegExp(
-        `(^|\\s)${className}(?!\\S)`,
-        "g"
-      );
-
-      node.className = node.className.replace(regExp, " ");
-    });
-  }
-
-  /**
-   * Toggles a class from all DOM nodes that match the given selector.
-   *
-   * @param  {String} selector  DOM selector
-   * @param  {String} className The class to toggle
-   */
-  function toggleClass([selector, className]) {
-    log("toggleClass", selector, className);
-
-    getNodeList(selector).forEach(node => {
-      const alreadyAdded = node.className.split(/\s+/).indexOf(className) > -1;
-
-      if (alreadyAdded) {
-        removeClass([selector, className]);
-      } else {
-        addClass([selector, className]);
-      }
-    });
+    domUtils.getNodeList(selector).forEach(domUtils.removeClass(className));
   }
 
   /**
@@ -201,10 +165,16 @@ function register(ports, log) {
     log(
       "innerHtml",
       selector,
-      rawHtml === "" ? "" : "\n" + rawHtml.substring(0, 200) + (rawHtml.length > 200 ? "..." : "")
+      rawHtml === ""
+        ? ""
+        : "\n"
+          + rawHtml.substring(0, 200)
+          + (rawHtml.length > 200
+               ? "..."
+               : "")
     );
 
-    getNodeList(selector).forEach(node => {
+    domUtils.getNodeList(selector).forEach(node => {
       node.innerHTML = rawHtml;
     });
 
@@ -214,13 +184,15 @@ function register(ports, log) {
   /**
    * Append the given HTML as a child of the `parentSelector` node.
    *
+   * Does not work in Internet Explorer.
+   *
    * @param  {String} parentSelector DOM selector for the container of the `rawHtml`
    * @param  {String} rawHtml        HTML represented as a string (should have a single root node, or else failure might occur)
    */
   function appendChild([parentSelector, rawHtml]) {
     log("appendChild", parentSelector, rawHtml);
 
-    const node = getNode(parentSelector);
+    const node = domUtils.getNode(parentSelector);
 
     if (!node) {
       log("appendChild [parent not found]", parentSelector, rawHtml);
@@ -244,7 +216,7 @@ function register(ports, log) {
   function removeNodes(selector) {
     log("removeNodes", selector);
 
-    getNodeList(selector).forEach(node => {
+    domUtils.getNodeList(selector).forEach(node => {
       if (!node.parentNode) {
         return;
       }
@@ -261,7 +233,7 @@ function register(ports, log) {
   function click(selector) {
     log("click", selector);
 
-    getNodeList(selector).forEach(node => node.click());
+    domUtils.getNodeList(selector).forEach(node => node.click());
   }
 
   /**
@@ -272,7 +244,7 @@ function register(ports, log) {
   function focus(selector) {
     log("focus", selector);
 
-    const node = getNode(selector);
+    const node = domUtils.getNode(selector);
 
     if (node) {
       node.focus();
@@ -341,7 +313,7 @@ function register(ports, log) {
   function setProperty([selector, property, value]) {
     log("setProperty", selector, property, value);
 
-    getNodeList(selector).forEach(node => {
+    domUtils.getNodeList(selector).forEach(node => {
       node[property] = value;
     });
   }
@@ -356,7 +328,7 @@ function register(ports, log) {
   function setCssProperty([selector, property, value]) {
     log("setCssProperty", selector, property, value);
 
-    getNodeList(selector).forEach(node => {
+    domUtils.getNodeList(selector).forEach(node => {
       node.style.setProperty(property, value); // node.style is a CSSStyleDeclaration object
     });
   }
@@ -370,7 +342,7 @@ function register(ports, log) {
   function removeCssProperty([selector, property]) {
     log("removeCssProperty", selector, property);
 
-    getNodeList(selector).forEach(node => {
+    domUtils.getNodeList(selector).forEach(node => {
       node.style.removeProperty(property); // node.style is a CSSStyleDeclaration object
     });
   }
@@ -386,7 +358,7 @@ function register(ports, log) {
   function setDataAttribute([selector, key, value]) {
     log("setDataAttribute", selector, key, value);
 
-    getNodeList(selector).forEach(node => {
+    domUtils.getNodeList(selector).forEach(node => {
       node.dataset[key] = value;
     });
   }
@@ -399,7 +371,7 @@ function register(ports, log) {
   function getNodePosition(selector) {
     log("getNodePosition", selector);
 
-    const node = getNode(selector);
+    const node = domUtils.getNode(selector);
 
     if (!node) {
       log("getNodePosition [not found]", selector);
@@ -420,7 +392,7 @@ function register(ports, log) {
   function querySelector(selector) {
     log("querySelector", selector);
 
-    const node = getNode(selector);
+    const node = domUtils.getNode(selector);
 
     if (!node) {
       log("querySelector [not found]", selector);
@@ -450,17 +422,6 @@ function register(ports, log) {
     const nodeRecords = nodes.forEach(toNodeRecord(node));
     log("querySelectorAllResponse", selector, nodeRecords);
     ports.querySelectorAll.send([selector, nodeRecords]);
-  }
-
-  /**
-   * Preload an image at the given URL.
-   *
-   * @param  {String} url
-   */
-  function preloadImage(url) {
-    log("preloadImage", url);
-
-    new Image().src = url;
   }
 }
 
@@ -556,6 +517,37 @@ function sumNodePropertyWithAncestors(property, sum, node) {
 
 function preventDefault(event) {
   event.preventDefault();
+}
+
+/**
+ * Get the value of a form field in the form of an HtmlElement or NodeList
+ *
+ * @param  {HtmlElement|NodeList} nodeOrNodeList Some kind of DOM node or NodeList
+ * @return {String|Boolean|null}                 null if no value found, bool for checkboxes
+ */
+function formFieldValue(nodeOrNodeList) {
+  if (nodeOrNodeList.type === "checkbox") {
+    return nodeOrNodeList.checked;
+  } else if (nodeOrNodeList.value !== undefined) {
+    // Handle `HTMLInputElement`, `HtmlSelectElement`, `HtmlTextAreaElement`, and `RadioNodeList`
+    return nodeOrNodeList.value;
+  } else if (nodeOrNodeList instanceof NodeList && nodeOrNodeList[0].type === "radio") {
+    // Safari 9: NodeList is a list of HTMLInputElement objects with type="radio"
+    // Let's find the "checked" item
+    for (node in nodeOrNodeList) {
+      if (node === "length") {
+        continue;
+      }
+
+      if (nodeOrNodeList[node].checked === true) {
+        return nodeOrNodeList[node].value;
+      }
+    }
+
+    return null;
+  }
+
+  return null;
 }
 
 function throwMissingAddEventListenerError(message, object) {

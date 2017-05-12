@@ -5,8 +5,8 @@
  * @return {Array}           An Array of DOM nodes rather than a NodeList. (Improves browser compatibility.)
  */
 function getNodeList(selector) {
-  return selector === "window"   ? [window] :
-         selector === "document" ? [document] :
+  return selector === 'window'   ? [window] :
+         selector === 'document' ? [document] :
          nodeListToArray(document.querySelectorAll(selector));
 }
 
@@ -30,7 +30,7 @@ function nodeListToArray(nodeList) {
   const nodeArray = [];
 
   for (let index in nodeList) {
-    if (nodeList.hasOwnProperty(index) && index !== "length") {
+    if (nodeList.hasOwnProperty(index) && index !== 'length') {
       nodeArray.push(nodeList[index]);
     }
   }
@@ -42,12 +42,29 @@ const addClass = (className) => (node) => {
   const alreadyAdded = node.className.split(/\s+/).indexOf(className) > -1;
 
   if (!alreadyAdded) {
-    node.className += " " + className;
+    node.className += ' ' + className;
   }
 };
 
+const removeClass = (className) => (node) => {
+  let regExp = new RegExp(
+    `(^|\\s)${escapeRegExp(className)}\\s*`,
+    'g'
+  );
+
+  node.className = node.className.replace(regExp, ' ');
+};
+
+/**
+ * Credit: http://stackoverflow.com/a/6969486/1772152
+ */
+function escapeRegExp(str) {
+  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+}
+
 module.exports = {
   addClass: addClass,
+  removeClass: removeClass,
   getNodeList: getNodeList,
   getNode: getNode
 };
