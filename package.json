@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/knledg/elm-dom-ports.git"
+    "url": "git+https://github.com/paulstatezny/elm-dom-ports.git"
   },
   "keywords": [
     "Elm",
@@ -18,12 +18,12 @@
     "dom",
     "jQuery"
   ],
-  "author": "Consolidated Knowledge",
+  "author": "Paul Statezny",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/knledg/elm-dom-ports/issues"
+    "url": "https://github.com/paulstatezny/elm-dom-ports/issues"
   },
-  "homepage": "https://github.com/knledg/elm-dom-ports#readme",
+  "homepage": "https://github.com/paulstatezny/elm-dom-ports#readme",
   "devDependencies": {
     "babel-cli": "^6.22.2",
     "babel-core": "^6.22.1",

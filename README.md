@@ -67,7 +67,7 @@ update msg model =
 
 ### 4. Register your Elm app in JavaScript
 
-#### Using [Elm Router](https://github.com/knledg/elm-router)
+#### Using [Elm Router](https://github.com/paulstatezny/elm-router)
 
 ```javascript
 var domPorts = require('elm-dom-ports');
@@ -89,4 +89,4 @@ domPorts.register(myApp.ports);
 
 ## Questions or Problems?
 
-Feel free to create an issue in the [GitHub issue tracker](https://github.com/knledg/elm-dom-ports/issues).
+Feel free to create an issue in the [GitHub issue tracker](https://github.com/paulstatezny/elm-dom-ports/issues).
